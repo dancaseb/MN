@@ -156,3 +156,13 @@ class Filtr:
         for i in self.system.tracet:
             self.step()
 
+
+class Animator:
+    def __init__(self, trace):
+        """
+        trace: data ktera chceme vlozit do animace.
+        """
+
+    def animate(self):
+        pass
+
