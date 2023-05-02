@@ -9,22 +9,29 @@ class Model:
     """
     def __init__(self):
         pass
+
     def set_D(self, D):
         """
         Nastavi delku casoveho kroku D.
         """
         self.D = D
+
     def Ak(self, k):
         pass
+
     def Bk(self, k):
         pass
+
     def Hk(self, k):
         pass
+
     def Qk(self, k):
         pass
+
     def Rk(self, k):
         pass
-    def Uk(self, k):
+
+    def Uk(self, k, **kwargs):
         pass
 
 class System:
@@ -65,7 +72,8 @@ class System:
         H = self.model.Hk(self.k)
         Q = self.model.Qk(self.k)
         R = self.model.Rk(self.k)
-        U = self.model.Uk(self.k)
+        U = self.model.Uk(self.k, y=self.x[1])  # vyska
+        print(self.x[0], self.x[1])
         W = np.random.multivariate_normal(np.zeros(Q.shape[0]), Q)
         V = np.random.multivariate_normal(np.zeros(R.shape[0]), R)
         self.x = np.dot(A, self.x)+np.dot(B, U)+W
@@ -124,7 +132,7 @@ class Filtr:
         H = self.model.Hk(self.k)
         Q = self.model.Qk(self.k)
         R = self.model.Rk(self.k)
-        U = self.model.Uk(self.k)
+        U = self.model.Uk(self.k, y=self.mu[0])
         y = self.system.tracey[int(self.k)-1]
         
         # parametry jednokrokove predikce 
