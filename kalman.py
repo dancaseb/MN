@@ -73,7 +73,7 @@ class System:
         Q = self.model.Qk(self.k)
         R = self.model.Rk(self.k)
         U = self.model.Uk(self.k, y=self.x[1])  # vyska
-        print(self.x[0], self.x[1])
+        print(self.x[2], self.x[3])
         W = np.random.multivariate_normal(np.zeros(Q.shape[0]), Q)
         V = np.random.multivariate_normal(np.zeros(R.shape[0]), R)
         self.x = np.dot(A, self.x)+np.dot(B, U)+W
@@ -156,21 +156,24 @@ class Filtr:
             self.trace_sigma = np.vstack([self.trace_sigma, self.sigma[None, :,:]])
             self.trace_sigma_p = np.vstack([self.trace_sigma_p, self.sigma_p[None, :, :]])
 
-    def run(self):
+    def run(self, n):
         """
         vypocet filtraci pro celou posloupnost pozorovani 
         """
 
-        for i in self.system.tracet:
+        for i in range(n):
             self.step()
 
 
-class Animator:
-    def __init__(self, trace):
-        """
-        trace: data ktera chceme vlozit do animace.
-        """
+class Simulation:
+    def __init__(self, enemy_model):
+        self.system = System(enemy_model, np.array([0, 15000, 555, 0]))
+        mu0 = np.array([0, 0, 0, 0])
+        sigma0 = np.diag([1e6, 1e6, 1e6, 1e6])
+        self.filtr = Filtr(self.system, mu0, sigma0)
 
-    def animate(self):
-        pass
+    def run(self, steps):
+        for _ in range(steps):
+            self.system.run(1)
+            self.filtr.run(1)
 

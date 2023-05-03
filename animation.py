@@ -16,8 +16,8 @@ class Animator:
         self.missile_plots = []
         # Create the figure object and axes
         self.fig, self.ax = plt.subplots(figsize=(8, 6))
-        self.xlim_min, self.xlim_max = 0, 200
-        self.ylim_min, self.ylim_max = 0, 60
+        self.xlim_min, self.xlim_max = 0, 30000
+        self.ylim_min, self.ylim_max = 0, 16000
         self.ax.set_xlim(self.xlim_min, self.xlim_max)
         self.ax.set_ylim(self.ylim_min, self.ylim_max)
         # self.planets_animation = None
