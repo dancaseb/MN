@@ -73,7 +73,6 @@ class System:
         Q = self.model.Qk(self.k)
         R = self.model.Rk(self.k)
         U = self.model.Uk(self.k, y=self.x[1])  # vyska
-        print(self.x[2], self.x[3])
         W = np.random.multivariate_normal(np.zeros(Q.shape[0]), Q)
         V = np.random.multivariate_normal(np.zeros(R.shape[0]), R)
         self.x = np.dot(A, self.x)+np.dot(B, U)+W
@@ -120,6 +119,8 @@ class Filtr:
         self.trace_mu_p = None      # posloupnost str. hodnot jednokrokovych predikci 
         self.trace_sigma = None     # posloupnost kovariancnich matic filtraci
         self.trace_sigma_p = None   # posloupnost kovariancnich matic filtraci
+        self.mu_p_ahead = self.mu
+        self.sigma_p_ahead = self.sigma
         
     def step(self):
         """
@@ -132,7 +133,7 @@ class Filtr:
         H = self.model.Hk(self.k)
         Q = self.model.Qk(self.k)
         R = self.model.Rk(self.k)
-        U = self.model.Uk(self.k, y=self.mu[0])
+        U = self.model.Uk(self.k, y=self.mu[1])
         y = self.system.tracey[int(self.k)-1]
         
         # parametry jednokrokove predikce 
@@ -164,16 +165,58 @@ class Filtr:
         for i in range(n):
             self.step()
 
+    def predict_step(self, k):
+        A = self.model.Ak(k)
+        B = self.model.Bk(k)
+        Q = self.model.Qk(k)
+        U = self.model.Uk(k, y=self.mu_p_ahead[1])
+
+        self.mu_p_ahead = A.dot(self.mu_p_ahead) + B.dot(U)
+        self.sigma_p_ahead = A.dot(self.sigma_p_ahead).dot(A.T)+Q
+
+    def predict_ahead(self, n):
+        self.mu_p_ahead = self.mu
+        self.sigma_p_ahead = self.sigma
+        for i in range(n):
+            self.predict_step(self.k + i + 1)
+
 
 class Simulation:
-    def __init__(self, enemy_model):
-        self.system = System(enemy_model, np.array([0, 15000, 555, 0]))
+    def __init__(self, enemy_missile, friendly_missile):
+        self.system = System(enemy_missile, np.array([0, 15000, 555, 0]))
+        self.friendly_system = System(friendly_missile, np.array([30000, 0, 0, 0]))
         mu0 = np.array([0, 0, 0, 0])
         sigma0 = np.diag([1e6, 1e6, 1e6, 1e6])
         self.filtr = Filtr(self.system, mu0, sigma0)
+        self.base = np.array([30000, 0])
+        self.is_setup = False
 
-    def run(self, steps):
-        for _ in range(steps):
-            self.system.run(1)
-            self.filtr.run(1)
+    def run(self):
+        self.system.run(1)
+        self.filtr.run(1)
 
+        if self.calculate_distance(self.base, np.array([self.filtr.mu_p_ahead[0], self.filtr.mu_p_ahead[1]])) > 10000:
+            self.filtr.predict_ahead(200)
+        else:
+            self.run_friendly_system()
+        if self.calculate_distance(np.array([self.friendly_system.x[0], self.friendly_system.x[1]]),
+                                   np.array([self.system.x[0], self.system.x[1]])) < 50:
+            print('hit')
+    def run_friendly_system(self):
+        if self.is_setup is False:
+            self.is_setup = True
+            direction_to_predicted_missile = np.array([self.filtr.mu_p_ahead[0], self.filtr.mu_p_ahead[1]]) - self.base
+            friendly_speed = direction_to_predicted_missile/(200 * 0.1)
+            print([self.filtr.mu_p_ahead[0], self.filtr.mu_p_ahead[1]])
+            self.friendly_system.x0 = np.array([30000, 0, friendly_speed[0], friendly_speed[1]])
+            self.friendly_system.reset()
+            self.friendly_system.run(1)
+        else:
+            self.friendly_system.run(1)
+
+    def calculate_distance(self, point1, point2):
+        try:
+            distance = np.linalg.norm(point1 - point2)
+        except TypeError:
+            return 150000
+        return distance
