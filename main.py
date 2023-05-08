@@ -1,10 +1,10 @@
 from kalman import *
 from animation import Animator
-steps = 100
+
 
 R = 6400000
 g = 9.81
-class PlaneModel(Model):
+class PlaneModel(ModelProjekt):
 
     def Ak(self, k):
         return (np.array([[1, 0, self.D, 0],
@@ -33,7 +33,7 @@ class PlaneModel(Model):
         return np.array([0, -g * (1 - (2 * y / R))])
 
 
-class FriendlyMissile(Model):
+class FriendlyMissile(ModelProjekt):
 
     def Ak(self, k):
         return (np.array([[1, 0, self.D, 0],
@@ -67,9 +67,10 @@ M2.set_D(0.1)
 Friendly = FriendlyMissile()
 Friendly.set_D(0.1)
 
-S = Simulation(M2, Friendly)
+S = Simulation(M2, Friendly, np.array([0,0,0,0]),np.diag([1e6, 1e6, 1e6, 1e6]), np.array([0, 15000, 555, 0]),  np.array([30000, 0, 0, 0]))
 anim = Animator(S, 1000)
 anim.start_animation()
+
 
 
 
