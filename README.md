@@ -1,0 +1,2 @@
+Projekt do předmětu Modely s neurčitostí. Implementace a použití Kálmánova filtru. Source kód lze najít v kalman.py a animace v animation.py souboru.
+V jupyter notebooku example.ipynb jsou příklady použítí Kálmánova filtru pro detekci pohybující se bomby vzduchem.  
