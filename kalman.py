@@ -1,5 +1,7 @@
 import numpy as np
 
+from constants import friendly_missile_range, enemy_missile_detectable_range
+
 
 class ModelProjekt:
     """
@@ -66,8 +68,24 @@ class SystemProjekt:
         krok simulace
         """
 
+        # print(np.linalg.norm(np.array([0,self.x[3]]) + np.array([self.x[2],0])))
+
+        # if np.arctan(abs(self.x[3]) / abs(self.x[2])) > 0.7:
+        #     self.model.ky = 200
+        # elif np.arctan(abs(self.x[3]) / abs(self.x[2])) > 0.6:
+        #     self.model.ky = 300
+        # elif np.arctan(abs(self.x[3]) / abs(self.x[2])) > 0.5:
+        #     self.model.ky = 500
+        # elif np.arctan(abs(self.x[3]) / abs(self.x[2])) > 0.3:
+        #     self.model.ky = 800
+        # elif np.arctan(abs(self.x[3])/abs(self.x[2])) > 0.2:
+        #     self.model.ky = 900
+
+        # if self.x[3] < -50:
+        #     self.model.ky = 20
+
         self.k = self.k+1
-        A = self.model.Ak(self.k)
+        A = self.model.Ak(self.k, vx=self.x[2], vy=self.x[3])
         B = self.model.Bk(self.k)
         H = self.model.Hk(self.k)
         Q = self.model.Qk(self.k)
@@ -127,7 +145,7 @@ class FiltrProjekt:
         """
 
         self.k = self.k+1
-        A = self.model.Ak(self.k)
+        A = self.model.Ak(self.k, vx=self.mu[2], vy=self.mu[3])
         B = self.model.Bk(self.k)
         H = self.model.Hk(self.k)
         Q = self.model.Qk(self.k)
@@ -164,7 +182,7 @@ class FiltrProjekt:
             self.step()
 
     def predict_step(self, k):
-        A = self.model.Ak(k)
+        A = self.model.Ak(k, vx=self.mu_p_ahead[2], vy=self.mu_p_ahead[3] )
         B = self.model.Bk(k)
         Q = self.model.Qk(k)
         U = self.model.Uk(k, y=self.mu_p_ahead[1])
@@ -182,11 +200,11 @@ class FiltrProjekt:
 class Simulation:
     def __init__(self, enemy_missile, friendly_missile, mu0, sigma0, system_x0, fr_system_x0):
         self.system = SystemProjekt(enemy_missile, system_x0)
-        self.friendly_system = SystemProjekt(friendly_missile,fr_system_x0)
+        self.friendly_system = SystemProjekt(friendly_missile, fr_system_x0)
         # mu0 = mu0
         # sigma0 = np.diag([1e6, 1e6, 1e6, 1e6])
         self.filtr = FiltrProjekt(self.system, mu0, sigma0)
-        self.base = np.array([30000, 0])
+        self.base = np.array([fr_system_x0[0], fr_system_x0[1]])
         self.is_setup = False
         self.was_successful = False
 
@@ -194,13 +212,15 @@ class Simulation:
         if self.was_successful is False:
             self.system.run(1)
             self.filtr.run(1)
-
-            if self.calculate_distance(self.base, np.array([self.filtr.mu_p_ahead[0], self.filtr.mu_p_ahead[1]])) > 10000:
-                self.filtr.predict_ahead(200)
-            else:
-                self.run_friendly_system()
+            if self.calculate_distance(self.base, np.array([self.system.x[0], self.system.x[
+                1]])) < enemy_missile_detectable_range:  # start the predicting for enemy missile
+                if self.calculate_distance(self.base, np.array(
+                        [self.filtr.mu_p_ahead[0], self.filtr.mu_p_ahead[1]])) > friendly_missile_range:
+                    self.filtr.predict_ahead(200)
+                else:
+                    self.run_friendly_system()
             distance = self.calculate_distance(np.array([self.friendly_system.x[0], self.friendly_system.x[1]]),
-                                       np.array([self.system.x[0], self.system.x[1]]))
+                                               np.array([self.system.x[0], self.system.x[1]]))
             if distance < 100:
                 print(distance)
             if distance < 30:
@@ -213,7 +233,7 @@ class Simulation:
             direction_to_predicted_missile = np.array([self.filtr.mu_p_ahead[0], self.filtr.mu_p_ahead[1]]) - self.base
             friendly_speed = direction_to_predicted_missile/(200 * 0.1)
             print([self.filtr.mu_p_ahead[0], self.filtr.mu_p_ahead[1]])
-            self.friendly_system.x0 = np.array([30000, 0, friendly_speed[0], friendly_speed[1]])
+            self.friendly_system.x0 = np.array([self.base[0], self.base[1], friendly_speed[0], friendly_speed[1]])
             self.friendly_system.reset()
             self.friendly_system.run(1)
         else:

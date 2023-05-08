@@ -4,9 +4,10 @@ from animation import Animator
 
 R = 6400000
 g = 9.81
+wind = 9
 class PlaneModel(ModelProjekt):
 
-    def Ak(self, k):
+    def Ak(self, k, **kwargs):
         return (np.array([[1, 0, self.D, 0],
                           [0, 1, 0, self.D],
                           [0, 0, 1, 0],
@@ -35,7 +36,7 @@ class PlaneModel(ModelProjekt):
 
 class FriendlyMissile(ModelProjekt):
 
-    def Ak(self, k):
+    def Ak(self, k, **kwargs):
         return (np.array([[1, 0, self.D, 0],
                           [0, 1, 0, self.D],
                           [0, 0, 1, 0],

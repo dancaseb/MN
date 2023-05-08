@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+
+from constants import friendly_missile_range
 from kalman import Simulation
 import numpy as np
 
@@ -36,6 +38,9 @@ class Animator:
         friendly_missile_plot, = self.ax.plot([], [], 'o', color='green', alpha=0.5)
         self.friendly_missile_plot.append(friendly_missile_plot)
 
+        circle = plt.Circle(tuple(self.simulation.base), radius=friendly_missile_range, fill=False, linestyle='--')
+        self.ax.add_patch(circle)
+
         # list of all plots. background, trajectories and planets
         self.plots = self.trajectories_plots + self.missile_plots + self.predict_missile_plot + self.friendly_missile_plot
 
@@ -44,8 +49,8 @@ class Animator:
 
     def update(self, i):
         if self.simulation.was_successful is not True and self.simulation.system.x[1] >= 0:  # target was not hit and is still in the air
-            # print('running simul')
             self.simulation.run()
+            # print(self.simulation.system.tracex[:, 0][-1])
             xlist = [x for x in self.simulation.filtr.trace_mu[0:i + 1, 0]]  # trace_mu[0:i + 1, 0]]
             # ylist = [y for y in self. ## trace_mu[0:i + 1, 1]]
             ylist = [y for y in self.simulation.filtr.trace_mu[0:i + 1, 1]]
