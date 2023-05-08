@@ -68,22 +68,6 @@ class SystemProjekt:
         krok simulace
         """
 
-        # print(np.linalg.norm(np.array([0,self.x[3]]) + np.array([self.x[2],0])))
-
-        # if np.arctan(abs(self.x[3]) / abs(self.x[2])) > 0.7:
-        #     self.model.ky = 200
-        # elif np.arctan(abs(self.x[3]) / abs(self.x[2])) > 0.6:
-        #     self.model.ky = 300
-        # elif np.arctan(abs(self.x[3]) / abs(self.x[2])) > 0.5:
-        #     self.model.ky = 500
-        # elif np.arctan(abs(self.x[3]) / abs(self.x[2])) > 0.3:
-        #     self.model.ky = 800
-        # elif np.arctan(abs(self.x[3])/abs(self.x[2])) > 0.2:
-        #     self.model.ky = 900
-
-        # if self.x[3] < -50:
-        #     self.model.ky = 20
-
         self.k = self.k+1
         A = self.model.Ak(self.k, vx=self.x[2], vy=self.x[3])
         B = self.model.Bk(self.k)
@@ -201,8 +185,6 @@ class Simulation:
     def __init__(self, enemy_missile, friendly_missile, mu0, sigma0, system_x0, fr_system_x0):
         self.system = SystemProjekt(enemy_missile, system_x0)
         self.friendly_system = SystemProjekt(friendly_missile, fr_system_x0)
-        # mu0 = mu0
-        # sigma0 = np.diag([1e6, 1e6, 1e6, 1e6])
         self.filtr = FiltrProjekt(self.system, mu0, sigma0)
         self.base = np.array([fr_system_x0[0], fr_system_x0[1]])
         self.is_setup = False
